@@ -1,4 +1,4 @@
-# SLP Compress
+# SLPZ
 This library compresses and decompresses between the slp and slpz formats.
 
 You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches.
