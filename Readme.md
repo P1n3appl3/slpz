@@ -11,16 +11,13 @@ zstd is not required on the user's computer; the library is statically linked at
 # Comparison with 'slippc'
 slippc is very impressive. 
 They have achieved much higher compression rates by abusing the contents of events.
-However, in my opinion, this comes with three big drawbacks:
-1. *Maintentance*: Due to abusing the structure of events, slippc is beholden to the slp spec and must be manually updated for each version.
-Slippc has not been updated for over a year and fails on new replays.
+However, in my opinion, this comes with two big drawbacks:
+1. **Maintentance**: Due to abusing the structure of events, slippc is beholden to the slp spec and must be manually updated for each version.
+*Slippc has not been updated for over a year and fails on new replays.*
 slp_compress does not care about the contents of events (Other than the Event Payloads event). 
 It will work for all slp spec changes in the future.
-2. *Complexity*: slippc is over 10000 lines of code. slp_compress achieves comparable compression with 300 lines of code. 
-This is not entirely a fair comparison as slippc does more than compress replays, but the point stands.
-slp_compress is much easier to understand and modify than slippc.
-3. *Performance*: slp_compress uses zstd compression. slippc uses lzma compression.
-lzma compression is better than zstd, but takes order of magnitudes longer to compress and decompress.
+2. **Performance**: slp_compress uses zstd compression. slippc uses lzma compression.
+lzma compression is slightly better than zstd, but takes order of magnitudes longer to compress and decompress.
 
 # The SLPZ Format
 
