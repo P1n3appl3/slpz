@@ -1,7 +1,15 @@
 [package]
 name = "slpz"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+
+description = "Compresses and decompresses between the slp and slpz Slippi replay formats."
+readme = "Readme.md"
+license = "MIT OR Apache-2.0"
+keywords = ["compression", "cli", "utility", "encoding"]
+categories = ["compression", "command-line-utilities"]
+repository = "https://github.com/AlexanderHarrison/slpz"
+documentation = "https://docs.rs/slpz/"
 
 [dependencies]
 zstd = { version = "0.13", default-features = false, features = ["thin"] }
