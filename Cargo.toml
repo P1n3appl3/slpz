@@ -1,5 +1,5 @@
 [package]
-name = "slp_compress"
+name = "slpz"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 zstd = { version = "0.13", default-features = false, features = ["thin"] }
 
 [lib]
-name = "slp_compress"
+name = "slpz"
 path = "src/lib.rs"
 
 [[bin]]

@@ -1,4 +1,4 @@
-use slp_compress::*;
+use slpz::*;
 
 const HELP: &'static str =
 "Usage: slpz [OPTIONS] <input path>
