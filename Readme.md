@@ -33,13 +33,13 @@ lzma compression is slightly better than zstd, but takes order of magnitudes lon
 All offsets are from file start.
 
 ## Event Sizes
-This is equivalent the 'Event Payloads' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#event-payloads).
+This is equivalent to the 'Event Payloads' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#event-payloads).
 
 ## Game start
-This is equivalent the 'Game Start' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#game-start).
+This is equivalent to the 'Game Start' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#game-start).
 
 ## Metadata
-This is equivalent the 'Metadata' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#the-metadata-element).
+This is equivalent to the 'Metadata' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#the-metadata-element).
 
 ## Compressed Events
 This is reordered events passed through zstd compression.

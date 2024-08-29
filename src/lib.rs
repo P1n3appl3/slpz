@@ -6,7 +6,7 @@
 //! Compression is done with the zstd compression library. 
 //! zstd is not required on the user's computer; the library is statically linked at compile time.
 //!
-//! The slpz format is documented on the 'compress' function.
+//! The slpz format is documented in the readme in the repo.
 //! Important information, such as player tags, stages, date, characters, etc. all remain uncompressed in the slpz format. 
 //! This allows slp file browsers to easily parse and display this information without
 //! needing to pull in zstd.
@@ -52,31 +52,6 @@ impl Decompressor {
 }
 
 /// Compresses an slp file to an slpz file.
-///
-/// # slpz Format
-///  
-/// ## Header
-/// 24 bytes.
-/// - 0..4: Version. Current version is 0
-/// - 4..8: Event Sizes offset
-/// - 8..12: Game Start offset
-/// - 12..16: Metadata offset
-/// - 16..20: Compressed events offset
-/// - 20..24: size of uncompressed events
-///
-/// All offsets are from file start.
-/// 
-/// ## Event Sizes
-/// This is equivalent the 'Event Payloads' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#event-payloads).
-///
-/// ## Game start
-/// This is equivalent the 'Game Start' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#game-start).
-///
-/// ## Metadata
-/// This is equivalent the 'Metadata' event in the [SLP Spec](https://github.com/project-slippi/slippi-wiki/blob/master/SPEC.md#the-metadata-element).
-///
-/// ## Compressed Events
-/// This is a zstd compressed format of reordered events. See `reorder_events` for more information.
 pub fn compress(compressor: &mut Compressor, slp: &[u8]) -> CompResult<Vec<u8>> {
     if slp.len() < 16 { return Err(CompError::InvalidFile) }
     if &slp[0..11] != &RAW_HEADER { return Err(CompError::InvalidFile) }
@@ -172,28 +147,6 @@ pub fn decompress(decompressor: &mut Decompressor, slpz: &[u8]) -> DecompResult<
 }
 
 /// Reorders events into byte columns.
-///
-/// Returns the number of bytes written.
-///
-/// # event order
-/// the first 4 bytes is the total number of events that were reordered.
-/// this is the command bytes, in order, for each event in the original slp file.
-///
-/// # reordered event data
-/// immediately after the event order list is the reordered event data.
-/// this is the bytewise column of data of each field, in order of increasing command bytes.
-///
-/// # example
-/// ```
-/// cmd abcd cmd2 efg cmd abcd cmd3 hi cmd2 efg
-/// ```
-/// converts to:
-/// ```
-/// // event order
-/// 5 cmd cmd2 cmd cmd3 cmd2
-/// // reordered event data
-/// aabbccdd eeffgg hi
-/// ```
 pub fn reorder_events(
     events: &[u8], 
     event_sizes: &[u16; 256],
@@ -349,7 +302,6 @@ pub fn unorder_events(
     Ok(unordered_size)
 }
 
-// assumes no command byte
 fn event_sizes(events: &[u8]) -> Option<([u16; 256], usize)> {
     if events.is_empty() { return None }
 
