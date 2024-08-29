@@ -71,9 +71,9 @@ They have achieved much higher compression rates by abusing the contents of even
 However, in my opinion, this comes with two big drawbacks:
 1. **Maintentance**: Due to abusing the structure of events, slippc is beholden to the slp spec and must be manually updated for each new version.
 *Slippc has not been updated for over a year and fails on new replays.*
-slp_compress does not care about the contents of events. (Other than the Event Payloads event). 
+slpz does not care about the contents of events. (Other than the Event Payloads event). 
 It will work for all slp spec changes in the future.
-2. **Performance**: slp_compress uses zstd compression. slippc uses lzma compression.
+2. **Performance**: slpz uses zstd compression. slippc uses lzma compression.
 lzma compresses slightly better than zstd, but takes order of magnitudes longer to compress and decompress.
 Incredibly fast decompression allows slpz files to be watched back, browsed, and used just like regular slp files,
 without needing seconds of waiting for decompression.
