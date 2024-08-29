@@ -4,8 +4,8 @@ const HELP: &'static str =
 "Usage: slpz [OPTIONS] <input path>
 
 Options:
-  --fast                Prefer speed over compression
-  --small               Prefer compression over speed [Default]
+  --fast                Prefer speed over compression [Default]
+  --small               Prefer compression over speed
   -x, --compress        
   -d, --decompress      
   -r, --recursive       Compress/decompress all files in subdirectories.
@@ -37,6 +37,16 @@ fn main() {
     // last arg is path
     let input_path = unwrap_option!(arg_strings.pop());
 
+    if &input_path == "-h" || &input_path == "--help" {
+        println!("{}", HELP);
+        std::process::exit(0);
+    }
+
+    if &input_path == "-v" || &input_path == "--version" {
+        println!("slpz version {} - created by Alex Harrison (Aitch)", VERSION);
+        std::process::exit(0);
+    }
+
     let mut i = 0;
     loop {
         let a = match arg_strings.get(i) { Some(a) => a, None => break, };
@@ -55,7 +65,7 @@ fn main() {
                 std::process::exit(0);
             }
             "-v" | "--version" => {
-                println!("slpz version {}", VERSION);
+                println!("slpz version {} - created by Alex Harrison (Aitch)", VERSION);
                 std::process::exit(0);
             }
             a => eprintln!("unknown argument '{}'", a),

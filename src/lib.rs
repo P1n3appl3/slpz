@@ -385,7 +385,7 @@ impl Options {
         compress: None,
         recursive: false,
         threading: true,
-        level: 6,
+        level: 3,
         log: true,
     };
 }
