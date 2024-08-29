@@ -1,23 +1,18 @@
 # SLP Compress
-
-Compresses and decompresses between the slp and slpz formats.
+This library compresses and decompresses between the slp and slpz formats.
 
 You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches.
 (~3Mb down to ~300Kb).
 
-Compression is done with the zstd compression library. 
+Compression is done with zstd. 
 zstd is not required on the user's computer; the library is statically linked at compile time.
 
-# Comparison with [slippc](https://github.com/pcrain/slippc)
-slippc is very impressive. 
-They have achieved much higher compression rates by abusing the contents of events.
-However, in my opinion, this comes with two big drawbacks:
-1. **Maintentance**: Due to abusing the structure of events, slippc is beholden to the slp spec and must be manually updated for each version.
-*Slippc has not been updated for over a year and fails on new replays.*
-slp_compress does not care about the contents of events (Other than the Event Payloads event). 
-It will work for all slp spec changes in the future.
-2. **Performance**: slp_compress uses zstd compression. slippc uses lzma compression.
-lzma compression is slightly better than zstd, but takes order of magnitudes longer to compress and decompress.
+Important information, such as player tags, stages, date, characters, etc. all remain uncompressed in the slpz format. 
+This allows slp file browsers to easily parse and display this information without needing to decompress the replay.
+
+# The slpz program
+You can download the the 'slpz' executable through the 'releases' on github.
+This program allows commandline compression and decompression of both files and entire directories.
 
 # The SLPZ Format
 
@@ -69,3 +64,16 @@ converts to:
 // Reordered Event Data
 AABBCCDD EEFFGG HI
 ```
+
+# Comparison with [slippc](https://github.com/pcrain/slippc)
+slippc is very impressive. 
+They have achieved much higher compression rates by abusing the contents of events.
+However, in my opinion, this comes with two big drawbacks:
+1. **Maintentance**: Due to abusing the structure of events, slippc is beholden to the slp spec and must be manually updated for each new version.
+*Slippc has not been updated for over a year and fails on new replays.*
+slp_compress does not care about the contents of events. (Other than the Event Payloads event). 
+It will work for all slp spec changes in the future.
+2. **Performance**: slp_compress uses zstd compression. slippc uses lzma compression.
+lzma compresses slightly better than zstd, but takes order of magnitudes longer to compress and decompress.
+Incredibly fast decompression allows slpz files to be watched back, browsed, and used just like regular slp files,
+without needing seconds of waiting for decompression.

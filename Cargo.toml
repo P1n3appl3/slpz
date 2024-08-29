@@ -4,4 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-zstd= { version = "0.13", default-features = false, features = ["thin"] }
+zstd = { version = "0.13", default-features = false, features = ["thin"] }
+
+[lib]
+name = "slp_compress"
+path = "src/lib.rs"
+
+[[bin]]
+name = "slpz"
+path = "src/slpz.rs"

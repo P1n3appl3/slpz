@@ -8,8 +8,7 @@
 //!
 //! The slpz format is documented in the readme in the repo.
 //! Important information, such as player tags, stages, date, characters, etc. all remain uncompressed in the slpz format. 
-//! This allows slp file browsers to easily parse and display this information without
-//! needing to pull in zstd.
+//! This allows slp file browsers to easily parse and display this information without needing to decompress the replay.
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CompError {
@@ -20,8 +19,33 @@ pub enum CompError {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum DecompError {
     InvalidFile,
-    VersionTooNew,
     DecompressionFailure,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum TargetPathError {
+    PathNotFound,
+    PathInvalid,
+    CompressOrDecompressAmbiguous,
+    ZstdInitError,
+}
+
+impl std::fmt::Display for CompError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            CompError::InvalidFile => "File is invalid",
+            CompError::CompressionFailure => "Compression failed",
+        })
+    }
+}
+
+impl std::fmt::Display for DecompError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            DecompError::InvalidFile => "File is invalid",
+            DecompError::DecompressionFailure => "Decompression failed",
+        })
+    }
 }
 
 pub type CompResult<T> = Result<T, CompError>;
@@ -37,7 +61,7 @@ pub struct Compressor { ctx: zstd::bulk::Compressor<'static> }
 pub struct Decompressor { ctx: zstd::bulk::Decompressor<'static> }
 
 impl Compressor {
-    /// compression_level should be between 0..19. The default is 3.
+    /// compression_level should be between 1..=19. The default is 3.
     pub fn new(compression_level: i32) -> Option<Compressor> {
         Some(Compressor {
             ctx: zstd::bulk::Compressor::new(compression_level).ok()?
@@ -123,7 +147,11 @@ pub fn decompress(decompressor: &mut Decompressor, slpz: &[u8]) -> DecompResult<
     let decompressed_events_size = u32::from_be_bytes(slpz[20..24].try_into().unwrap()) as usize;
 
     if slpz.len() < compressed_events_offset { return Err(DecompError::InvalidFile) }
-    if version > VERSION { return Err(DecompError::VersionTooNew) }
+
+    // We do not return a custom version error here. 
+    // If a file is invalid, it would raise this error instead of an InvalidFile. 
+    // Unsupported version errors would be nice to check, but too many false positives.
+    if version > VERSION { return Err(DecompError::InvalidFile) }
 
     let mut slp = Vec::with_capacity(slpz.len() * 32);
     slp.extend_from_slice(&RAW_HEADER);
@@ -147,7 +175,7 @@ pub fn decompress(decompressor: &mut Decompressor, slpz: &[u8]) -> DecompResult<
 }
 
 /// Reorders events into byte columns.
-pub fn reorder_events(
+fn reorder_events(
     events: &[u8], 
     event_sizes: &[u16; 256],
     buf: &mut Vec<u8>,
@@ -230,7 +258,7 @@ pub fn reorder_events(
 /// Undoes the reordering done by 'reorder_events'.
 ///
 /// Returns the number of bytes written.
-pub fn unorder_events(
+fn unorder_events(
     b: &[u8], 
     event_sizes: &[u16; 256], 
     buf: &mut Vec<u8>,
@@ -334,4 +362,231 @@ fn event_counts(events: &[u8], event_sizes: &[u16; 256]) -> CompResult<[u32; 256
     }
 
     Ok(counts)
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Options {
+    pub keep: bool,
+    pub compress: Option<bool>,
+    pub recursive: bool,
+    pub threading: bool,
+    /// must be between 1 and 19.
+    pub level: i32,
+    pub log: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self { Options::DEFAULT }
+}
+
+impl Options {
+    pub const DEFAULT: Self = Options {
+        keep: true,
+        compress: None,
+        recursive: false,
+        threading: true,
+        level: 6,
+        log: true,
+    };
+}
+
+/// Library access to slpz program functionality.
+///
+/// - Threaded directory compression/decompression.
+/// - Compression/decompression autodetection.
+/// - Deletion of old files.
+pub fn target_path(
+    options: &Options,
+    path: &std::path::Path
+) -> Result<(), TargetPathError> {
+    if !matches!(path.try_exists(), Ok(true)) { return Err(TargetPathError::PathNotFound) }
+    
+    let mut targets = Vec::new();
+    let mut should_compress = options.compress;
+
+    if path.is_dir() {
+        let c = match should_compress {
+            Some(c) => c,
+            None => return Err(TargetPathError::CompressOrDecompressAmbiguous),
+        };
+        let ex = std::ffi::OsStr::new(if c { "slp" } else { "slpz" });
+        get_targets(&mut targets, &path, options.recursive, ex);
+    } else if path.is_file() {
+        targets.push(path.to_path_buf());
+        if should_compress == None {
+            let ex = path.extension();
+            if ex == Some(std::ffi::OsStr::new("slp")) {
+                should_compress = Some(true);
+            } else if ex == Some(std::ffi::OsStr::new("slpz")) {
+                should_compress = Some(false);
+            }
+        }
+    } else {
+        return Err(TargetPathError::PathInvalid);
+    }
+
+    let will_compress = match should_compress {
+        Some(n) => n,
+        None => return Err(TargetPathError::CompressOrDecompressAmbiguous),
+    };
+
+    if !options.threading || targets.len() < 8 {
+        if will_compress {
+            let mut compressor = Compressor::new(options.level).ok_or(TargetPathError::ZstdInitError)?;
+            for t in targets.iter() { compress_target(&mut compressor, options, t); }
+        } else {
+            let mut decompressor = Decompressor::new().ok_or(TargetPathError::ZstdInitError)?;
+            for t in targets.iter() { decompress_target(&mut decompressor, options, t); }
+        }
+    } else {
+        // split into 8 approximately equal slices (why is this so annoying?)
+        let mut slices: [&[std::path::PathBuf]; 8] = [&[]; 8];
+        let chunk = targets.len() / 8;
+        let split = (chunk + 1) * (targets.len() % 8);
+        for (i, c) in targets[..split].chunks(chunk+1).chain(targets[split..].chunks(chunk)).enumerate() {
+            slices[i] = c;
+        }
+
+        for s in slices {
+            dbg!(s.as_ptr_range());
+        }
+
+        std::thread::scope(|scope| {
+            if will_compress {
+                for s in slices {
+                    scope.spawn(move || {
+                        let mut compressor = match Compressor::new(options.level) {
+                            Some(c) => c,
+                            None => {
+                                eprintln!("Error: Failed to init zstd compressor");
+                                return;
+                            }
+                        };
+
+                        for t in s { compress_target(&mut compressor, options, t); }
+                    });
+                }
+            } else {
+                for s in slices {
+                    scope.spawn(move || {
+                        let mut decompressor = match Decompressor::new() {
+                            Some(d) => d,
+                            None => {
+                                eprintln!("Error: Failed to init zstd decompressor");
+                                return;
+                            }
+                        };
+                        for t in s { decompress_target(&mut decompressor, options, t); }
+                    });
+                }
+            };
+        })
+    }
+    
+    Ok(())
+}
+
+fn compress_target(c: &mut Compressor, options: &Options, t: &std::path::PathBuf) {
+    let slp = match std::fs::read(&t) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error compressing {}: {}", t.display(), e);
+            return;
+        }
+    };
+    
+    match compress(c, &slp) {
+        Ok(slpz) => {
+            let mut out = t.clone();
+            if !out.set_extension("slpz") { 
+                eprintln!("Error creating new filename for {}", t.display());
+                return;
+            };
+            match std::fs::write(&out, &slpz) {
+                Ok(_) => {
+                    if options.log { println!("compressed {}", t.display()); }
+                    if !options.keep {
+                        match std::fs::remove_file(&t) {
+                            Ok(_) => if options.log { println!("removed {}", t.display()) },
+                            Err(e) => {
+                                eprintln!("Error removing {}: {}", t.display(), e);
+                                return;
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error compressing {}: {}", t.display(), e);
+                    return;
+                },
+            };
+        }
+        Err(e) => {
+            eprintln!("Error compressing {}: {}", t.display(), e);
+            return;
+        }
+    }
+}
+
+fn decompress_target(d: &mut Decompressor, options: &Options, t: &std::path::PathBuf) {
+    let slpz = match std::fs::read(&t) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error decompressing {}: {}", t.display(), e);
+            return;
+        }
+    };
+    
+    match decompress(d, &slpz) {
+        Ok(slp) => {
+            let mut out = t.clone();
+            if !out.set_extension("slp") { 
+                eprintln!("Error creating new filename for {}", t.display());
+                return; 
+            };
+            match std::fs::write(&out, &slp) {
+                Ok(_) => {
+                    if options.log { println!("decompressed {}", t.display()); }
+                    if !options.keep {
+                        match std::fs::remove_file(&t) {
+                            Ok(_) => if options.log { println!("removed {}", t.display()) },
+                            Err(e) => {
+                                eprintln!("Error removing {}: {}", t.display(), e);
+                                return;
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error decompressing {}: {}", t.display(), e);
+                    return;
+                }
+            };
+        }
+        Err(e) => {
+            eprintln!("Error decompressing {}: {}", t.display(), e);
+            return;
+        }
+    }
+}
+
+fn get_targets(
+    targets: &mut Vec<std::path::PathBuf>, 
+    path: &std::path::Path, 
+    rec: bool, 
+    ex: &std::ffi::OsStr,
+) -> Option<()> {
+    for f in std::fs::read_dir(path).ok()? {
+        let f = match f {
+            Ok(f) => f,
+            Err(_) => continue,
+        };
+
+        let path = f.path();
+
+        if rec && path.is_dir() { get_targets(targets, &path, rec, ex); }
+        if path.is_file() && path.extension() == Some(ex) { targets.push(path)}
+    }
+
+    Some(())
 }
