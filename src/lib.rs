@@ -175,24 +175,24 @@ pub fn decompress(decompressor: &mut Decompressor, slpz: &[u8]) -> DecompResult<
 ///
 /// Returns the number of bytes written.
 ///
-/// # Event Order
-/// The first 4 bytes is the total number of events that were reordered.
-/// This is the command bytes, in order, for each event in the original SLP file.
+/// # event order
+/// the first 4 bytes is the total number of events that were reordered.
+/// this is the command bytes, in order, for each event in the original slp file.
 ///
-/// # Reordered Event Data
-/// Immediately after the event order list is the reordered event data.
-/// This is the bytewise column of data of each field, in order of increasing command bytes.
+/// # reordered event data
+/// immediately after the event order list is the reordered event data.
+/// this is the bytewise column of data of each field, in order of increasing command bytes.
 ///
-/// # Example
+/// # example
 /// ```
-/// cmd ABCD cmd2 EFG cmd ABCD cmd3 HI cmd2 EFG
+/// cmd abcd cmd2 efg cmd abcd cmd3 hi cmd2 efg
 /// ```
 /// converts to:
 /// ```
-/// // Event Order
+/// // event order
 /// 5 cmd cmd2 cmd cmd3 cmd2
-/// // Reordered Event Data
-/// AABBCCDD EEFFGG HI
+/// // reordered event data
+/// aabbccdd eeffgg hi
 /// ```
 pub fn reorder_events(
     events: &[u8], 
