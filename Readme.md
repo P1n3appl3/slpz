@@ -8,7 +8,7 @@ You can expect slpz files to be around 8x to 12x times smaller than slp files fo
 Compression is done with the zstd compression library. 
 zstd is not required on the user's computer; the library is statically linked at compile time.
 
-# Comparison with 'slippc'
+# Comparison with [slippc](https://github.com/pcrain/slippc)
 slippc is very impressive. 
 They have achieved much higher compression rates by abusing the contents of events.
 However, in my opinion, this comes with two big drawbacks:
@@ -44,7 +44,7 @@ This is equivalent the 'Metadata' event in the [SLP Spec](https://github.com/pro
 ## Compressed Events
 This is reordered events passed through zstd compression.
 
-# Event Reordering?
+### Event Reordering?
 Reordering the bytes in events increases the compression ratio ~2x.
 
 A normal slp file is a stream of events consisting of a command byte and statically sized payload.
@@ -57,7 +57,7 @@ all the way to a list of the last bytes of the payload for command 255.
 
 To undo this reordering we also need the number of total events, so we put this in as 4 bytes at the start.
 
-## Example
+#### Example
 ```
 cmd ABCD cmd2 EFG cmd ABCD cmd3 HI cmd2 EFG
 ```
