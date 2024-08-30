@@ -48,9 +48,6 @@ impl std::fmt::Display for DecompError {
     }
 }
 
-pub type CompResult<T> = Result<T, CompError>;
-pub type DecompResult<T> = Result<T, DecompError>;
-
 const EVENT_PAYLOADS: u8 = 0x35;
 const GAME_START: u8 = 0x36;
 const RAW_HEADER: [u8; 11] = [0x7B, 0x55, 0x03, 0x72, 0x61, 0x77, 0x5B, 0x24, 0x55, 0x23, 0x6C];
@@ -76,7 +73,7 @@ impl Decompressor {
 }
 
 /// Compresses an slp file to an slpz file.
-pub fn compress(compressor: &mut Compressor, slp: &[u8]) -> CompResult<Vec<u8>> {
+pub fn compress(compressor: &mut Compressor, slp: &[u8]) -> Result<Vec<u8>, CompError> {
     if slp.len() < 16 { return Err(CompError::InvalidFile) }
     if &slp[0..11] != &RAW_HEADER { return Err(CompError::InvalidFile) }
 
@@ -137,7 +134,7 @@ pub fn compress(compressor: &mut Compressor, slp: &[u8]) -> CompResult<Vec<u8>> 
 }
 
 /// Decompresses an slpz file to an slp file.
-pub fn decompress(decompressor: &mut Decompressor, slpz: &[u8]) -> DecompResult<Vec<u8>> {
+pub fn decompress(decompressor: &mut Decompressor, slpz: &[u8]) -> Result<Vec<u8>, DecompError> {
     if slpz.len() < 24 { return Err(DecompError::InvalidFile) }
     let version                  = u32::from_be_bytes(slpz[0..4].try_into().unwrap());
     let event_sizes_offset       = u32::from_be_bytes(slpz[4..8].try_into().unwrap()) as usize;
@@ -179,7 +176,7 @@ fn reorder_events(
     events: &[u8], 
     event_sizes: &[u16; 256],
     buf: &mut Vec<u8>,
-) -> CompResult<usize> {
+) -> Result<usize, CompError> {
     let event_counts = event_counts(events, event_sizes)?;
 
     // ---------------------------------------
@@ -262,7 +259,7 @@ fn unorder_events(
     b: &[u8], 
     event_sizes: &[u16; 256], 
     buf: &mut Vec<u8>,
-) -> DecompResult<usize> {
+) -> Result<usize, DecompError> {
     let total_events = u32::from_be_bytes(b[0..4].try_into().unwrap()) as usize;
 
     let event_order_list_offset = 4;
@@ -349,7 +346,7 @@ fn event_sizes(events: &[u8]) -> Option<([u16; 256], usize)> {
     Some((event_payload_sizes, event_count as usize))
 }
 
-fn event_counts(events: &[u8], event_sizes: &[u16; 256]) -> CompResult<[u32; 256]> {
+fn event_counts(events: &[u8], event_sizes: &[u16; 256]) -> Result<[u32; 256], CompError> {
     let mut i = 0;
     let mut counts = [0u32; 256];
 
@@ -458,7 +455,6 @@ pub fn target_path(
                                 return;
                             }
                         };
-
                         for t in s { compress_target(&mut compressor, options, t); }
                     });
                 }
