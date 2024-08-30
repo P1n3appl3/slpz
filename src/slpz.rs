@@ -74,7 +74,7 @@ fn main() {
         i += 1;
     }
 
-    if let Err(e) = target_path(&options, std::path::Path::new(&input_path)) {
+    if let Err(e) = target_path(&options, std::path::Path::new(&input_path), None) {
         match e {
             TargetPathError::PathNotFound => eprintln!("Error: input path '{}' not found", &input_path),
             TargetPathError::PathInvalid => eprintln!("Error: input path '{}' not valid", &input_path),

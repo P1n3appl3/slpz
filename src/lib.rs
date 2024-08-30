@@ -389,12 +389,17 @@ impl Options {
 
 /// Library access to slpz program functionality.
 ///
+/// If Some, the sender will first send the number of targets.
+/// After that, the sender will send '1' for each target completed.
+/// If the sender cannot send, it will panic.
+///
 /// - Threaded directory compression/decompression.
 /// - Compression/decompression autodetection.
 /// - Deletion of old files.
 pub fn target_path(
     options: &Options,
-    path: &std::path::Path
+    path: &std::path::Path,
+    sender: Option<std::sync::mpsc::Sender<usize>>,
 ) -> Result<(), TargetPathError> {
     if !matches!(path.try_exists(), Ok(true)) { return Err(TargetPathError::PathNotFound) }
     
@@ -427,13 +432,21 @@ pub fn target_path(
         None => return Err(TargetPathError::CompressOrDecompressAmbiguous),
     };
 
+    if let Some(ref sender) = sender { sender.send(targets.len()).expect("Sending failed"); }
+
     if !options.threading || targets.len() < 8 {
         if will_compress {
             let mut compressor = Compressor::new(options.level).ok_or(TargetPathError::ZstdInitError)?;
-            for t in targets.iter() { compress_target(&mut compressor, options, t); }
+            for t in targets.iter() { 
+                compress_target(&mut compressor, options, t); 
+                if let Some(ref sender) = sender { sender.send(1).expect("Sending failed"); }
+            }
         } else {
             let mut decompressor = Decompressor::new().ok_or(TargetPathError::ZstdInitError)?;
-            for t in targets.iter() { decompress_target(&mut decompressor, options, t); }
+            for t in targets.iter() { 
+                decompress_target(&mut decompressor, options, t); 
+                if let Some(ref sender) = sender { sender.send(1).expect("Sending failed"); }
+            }
         }
     } else {
         // split into 8 approximately equal slices (why is this so annoying?)
@@ -444,10 +457,13 @@ pub fn target_path(
             slices[i] = c;
         }
 
+        let sender_ref = sender.as_ref();
+
         std::thread::scope(|scope| {
             if will_compress {
                 for s in slices {
                     scope.spawn(move || {
+                        let sender = sender_ref.clone();
                         let mut compressor = match Compressor::new(options.level) {
                             Some(c) => c,
                             None => {
@@ -455,12 +471,16 @@ pub fn target_path(
                                 return;
                             }
                         };
-                        for t in s { compress_target(&mut compressor, options, t); }
+                        for t in s { 
+                            compress_target(&mut compressor, options, t); 
+                            if let Some(ref sender) = sender { sender.send(1).expect("Sending failed"); }
+                        }
                     });
                 }
             } else {
                 for s in slices {
                     scope.spawn(move || {
+                        let sender = sender_ref.clone();
                         let mut decompressor = match Decompressor::new() {
                             Some(d) => d,
                             None => {
@@ -468,7 +488,10 @@ pub fn target_path(
                                 return;
                             }
                         };
-                        for t in s { decompress_target(&mut decompressor, options, t); }
+                        for t in s { 
+                            decompress_target(&mut decompressor, options, t); 
+                            if let Some(ref sender) = sender { sender.send(1).expect("Sending failed"); }
+                        }
                     });
                 }
             };
