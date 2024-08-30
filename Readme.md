@@ -1,4 +1,4 @@
-# SLPZ
+# slpz
 This library compresses and decompresses between the slp and slpz formats.
 
 You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches. (~3Mb down to ~300Kb).
@@ -11,13 +11,13 @@ Important information, such as player tags, stages, date, characters, etc. all r
 This allows slp file browsers to easily parse and display this information without needing to decompress the replay.
 
 # The slpz program
-You can download the the 'slpz' executable through the 'releases' on github.
+You can download the slpz executable through the 'Releases' menu on github.
 This program allows commandline compression and decompression of both files and entire directories.
 
 For example, the command `slpz -r --rm -x ~/Slippi/` will compress every replay in your Slippi replay directory.
 The command `slpz -r --rm -d ~/Slippi/` will decompress them.
 
-# The SLPZ Format
+# The slpz Format
 
 ## Header
 24 bytes.
