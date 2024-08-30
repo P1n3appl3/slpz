@@ -1,8 +1,8 @@
 # SLPZ
 This library compresses and decompresses between the slp and slpz formats.
 
-You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches.
-(~3Mb down to ~300Kb).
+You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches. (~3Mb down to ~300Kb).
+On my old thinkpad it can compress around 120 replays per second and decompress around 340 replays per second.
 
 Compression is done with zstd. 
 zstd is not required on the user's computer; the library is statically linked at compile time.
@@ -13,6 +13,9 @@ This allows slp file browsers to easily parse and display this information witho
 # The slpz program
 You can download the the 'slpz' executable through the 'releases' on github.
 This program allows commandline compression and decompression of both files and entire directories.
+
+For example, the command `slpz -r --rm -x ~/Slippi/` will compress every replay in your Slippi replay directory.
+The command `slpz -r --rm -d ~/Slippi/` will decompress them.
 
 # The SLPZ Format
 
