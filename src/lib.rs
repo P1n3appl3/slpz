@@ -447,10 +447,6 @@ pub fn target_path(
             slices[i] = c;
         }
 
-        for s in slices {
-            dbg!(s.as_ptr_range());
-        }
-
         std::thread::scope(|scope| {
             if will_compress {
                 for s in slices {
