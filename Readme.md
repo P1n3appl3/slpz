@@ -46,9 +46,9 @@ A normal slp file is a stream of events consisting of a command byte and statica
 Event payloads are almost all the same, so we can reorder the data to increase the compressability of the data.
 
 We first turn the event stream into a list of command bytes, keeping the order but removing the payloads.
-Then a list of all of the first bytes in the payload for event with command 0, 
-then all of the second bytes in the payload for event with command 0,
-all the way to a list of the last bytes of the payload for command 255.
+Then a list of all of the first bytes in the payloads for events with command 0, 
+then all of the second bytes in the payloads for events with command 0,
+all the way to a list of the last bytes of the payloads for command 255.
 
 To undo this reordering we also need the number of total events, so we put this in as 4 bytes at the start.
 
