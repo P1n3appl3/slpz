@@ -17,6 +17,8 @@ This program allows commandline compression and decompression of both files and 
 For example, the command `slpz -r --rm -x ~/Slippi/` will compress every replay in your Slippi replay directory.
 The command `slpz -r --rm -d ~/Slippi/` will decompress them.
 
+You can also use slpz as a [library](https://crates.io/crates/slpz).
+
 # The slpz Format
 
 ## Header
