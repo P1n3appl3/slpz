@@ -51,8 +51,8 @@ impl std::fmt::Display for DecompError {
 impl std::fmt::Display for TargetPathError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", match self {
-            TargetPathError::PathNotFound => "replay path not found",
-            TargetPathError::PathInvalid => "replay path invalid",
+            TargetPathError::PathNotFound => "Replay path not found",
+            TargetPathError::PathInvalid => "Replay path invalid",
             TargetPathError::CompressOrDecompressAmbiguous => "Not a slp or slpz file",
             TargetPathError::ZstdInitError => "Failed to init zstd",
         })
