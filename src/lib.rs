@@ -48,6 +48,17 @@ impl std::fmt::Display for DecompError {
     }
 }
 
+impl std::fmt::Display for TargetPathError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            TargetPathError::PathNotFound => "replay path not found",
+            TargetPathError::PathInvalid => "replay path invalid",
+            TargetPathError::CompressOrDecompressAmbiguous => "Not a slp or slpz file",
+            TargetPathError::ZstdInitError => "Failed to init zstd",
+        })
+    }
+}
+
 const EVENT_PAYLOADS: u8 = 0x35;
 const GAME_START: u8 = 0x36;
 const RAW_HEADER: [u8; 11] = [0x7B, 0x55, 0x03, 0x72, 0x61, 0x77, 0x5B, 0x24, 0x55, 0x23, 0x6C];
