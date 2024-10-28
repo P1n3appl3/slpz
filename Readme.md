@@ -1,5 +1,6 @@
 # slpz
-This library compresses and decompresses between the slp and slpz formats.
+This library compresses and decompresses between the slp and slpz formats. 
+The slpz format is 100% supported by rwing, meaning you can watch back, browse, and export savestates even while your replays are compressed.  
 
 You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches. (~3Mb down to ~300Kb).
 On my old thinkpad it can compress around 120 replays per second and decompress around 340 replays per second.
