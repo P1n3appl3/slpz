@@ -1,24 +1,28 @@
 # slpz
-This library compresses and decompresses between the slp and slpz formats. 
-The slpz format is 100% supported by rwing, meaning you can watch back, browse, and export savestates even while your replays are compressed.  
+Slpz compresses and decomoresses Slippi replay (slp) files. 
+The slpz format is 100% supported by [rwing](https://x.com/rwing_aitch/status/1844056466283692388), meaning you can watch back, browse, and export savestates even while your replays are compressed.  
 
 You can expect slpz files to be around 8x to 12x times smaller than slp files for regular matches. (~3Mb down to ~300Kb).
 On my old thinkpad it can compress around 120 replays per second and decompress around 340 replays per second.
 
-Compression is done with zstd. 
-zstd is not required on the user's computer; the library is statically linked at compile time.
+Compression is done with zstd.
+zstd is not required on the user's computer.
+The library is statically linked at compile time.
 
 Important information, such as player tags, stages, date, characters, etc. all remain uncompressed in the slpz format. 
 This allows slp file browsers to easily parse and display this information without needing to decompress the replay.
 
 # The slpz program
-You can download the slpz executable through the 'Releases' menu on github.
+You can download slpz [here](https://github.com/AlexanderHarrison/slpz/releases/latest).
 This program allows commandline compression and decompression of both files and entire directories.
 
 For example, the command `slpz -r --rm -x ~/Slippi/` will compress every replay in your Slippi replay directory.
 The command `slpz -r --rm -d ~/Slippi/` will decompress them.
 
-You can also use slpz as a [library](https://crates.io/crates/slpz).
+[Rwing](https://x.com/rwing_aitch/status/1844056466283692388) has a straightfoward process to compress/decompress built-in, 
+so you can use rwing if you don't want to use the command line.
+
+Programmers can also use slpz as a [library](https://crates.io/crates/slpz).
 
 # The slpz Format
 
