@@ -616,3 +616,33 @@ fn get_targets(
 
     Some(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reorder_round_trip() {
+        #[rustfmt::skip]
+        let events = [
+            3, 1, 2, 3, 4, 5,
+            1, 0, 1, 2,
+            1, 10, 11, 12,
+            2, 1,
+            2, 2,
+            3, 1, 2, 3, 4, 5,
+            1, 20, 21, 22
+        ];
+        let mut event_sizes = [0u16; 256];
+        event_sizes[..4].copy_from_slice(&[0, 3, 1, 5]);
+
+        let mut reordered = Vec::new();
+        reorder_events(&events, &event_sizes, &mut reordered).unwrap();
+        println!("{:?}", reordered);
+
+        let mut unordered = Vec::new();
+        unorder_events(&reordered, &event_sizes, &mut unordered).unwrap();
+
+        assert_eq!(events.as_slice(), &unordered);
+    }
+}
